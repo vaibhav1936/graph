@@ -1,0 +1,40 @@
+// Load the Plotly library
+import plotly from 'plotly.js-basic-dist';
+
+// Function to read and parse the log file
+async function readLogFile(filePath) {
+  const response = await fetch(filePath);
+  const logData = await response.text();
+
+  // Parse the log data into an array of data points
+  const dataPoints = logData.trim().split('\n').map(line => {
+    const [timestamp, value] = line.split(',');
+    return { x: new Date(timestamp), y: parseFloat(value) };
+  });
+
+  return dataPoints;
+}
+
+// Function to create the graph
+function createGraph(dataPoints) {
+  const layout = {
+    title: 'Graph from Log File',
+    xaxis: { title: 'Time' },
+    yaxis: { title: 'Value' }
+  };
+
+  const trace = {
+    x: dataPoints.map(point => point.x),
+    y: dataPoints.map(point => point.y),
+    type: 'scatter'
+  };
+
+  const data = [trace];
+
+  plotly.newPlot('graph-container', data, layout);
+}
+
+// Example usage
+readLogFile('path/to/log/file.txt')
+  .then(createGraph)
+  .catch(error => console.error('Error:', error));
