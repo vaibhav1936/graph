@@ -1,0 +1,78 @@
+// Load the Plotly library
+import plotly from 'plotly.js-basic-dist';
+
+// Function to read and parse the data
+async function readData(filePath) {
+  const response = await fetch(filePath);
+  const data = await response.json();
+
+  // Extract the different types of data
+  const scatterData = data.scatter;
+  const threeDData = data.threeD;
+  const trajectoryData = data.trajectory;
+
+  return { scatterData, threeDData, trajectoryData };
+}
+
+// Function to create the graphs
+function createGraphs({ scatterData, threeDData, trajectoryData }) {
+  // Create the scatter plot
+  const scatterLayout = {
+    title: 'Scatter Plot',
+    xaxis: { title: 'X' },
+    yaxis: { title: 'Y' }
+  };
+
+  const scatterTrace = {
+    x: scatterData.map(point => point.x),
+    y: scatterData.map(point => point.y),
+    mode: 'markers',
+    type: 'scatter'
+  };
+
+  const scatterData = [scatterTrace];
+  plotly.newPlot('scatter-container', scatterData, scatterLayout);
+
+  // Create the 3D plot
+  const threeDLayout = {
+    title: '3D Plot',
+    scene: {
+      xaxis: { title: 'X' },
+      yaxis: { title: 'Y' },
+      zaxis: { title: 'Z' }
+    }
+  };
+
+  const threeDTrace = {
+    x: threeDData.map(point => point.x),
+    y: threeDData.map(point => point.y),
+    z: threeDData.map(point => point.z),
+    mode: 'markers',
+    type: 'scatter3d'
+  };
+
+  const threeDData = [threeDTrace];
+  plotly.newPlot('three-d-container', threeDData, threeDLayout);
+
+  // Create the longitude-latitude trajectory
+  const trajectoryLayout = {
+    title: 'Longitude-Latitude Trajectory',
+    xaxis: { title: 'Longitude' },
+    yaxis: { title: 'Latitude' }
+  };
+
+  const trajectoryTrace = {
+    x: trajectoryData.map(point => point.longitude),
+    y: trajectoryData.map(point => point.latitude),
+    mode: 'lines',
+    type: 'scatter'
+  };
+
+  const trajectoryData = [trajectoryTrace];
+  plotly.newPlot('trajectory-container', trajectoryData, trajectoryLayout);
+}
+
+// Example usage
+readData('path/to/data/file.json')
+  .then(createGraphs)
+  .catch(error => console.error('Error:', error));
