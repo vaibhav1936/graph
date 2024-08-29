@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graph Plotter</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        #file-input { margin-bottom: 10px; }
+        #graph { width: 100%; height: 600px; }
+    </style>
+</head>
+<body>
+    <input type="file" id="file-input" accept=".m">
+    <div id="graph"></div>
+
+    <script>
+        function parseMFile(content) {
+            const lines = content.split('\n');
+            const data = {};
+            let currentVariable = '';
+
+            for (const line of lines) {
+                const trimmedLine = line.trim();
+                if (trimmedLine.includes('=')) {
+                    const [varName, varData] = trimmedLine.split('=');
+                    currentVariable = varName.trim();
+                    data[currentVariable] = varData.trim().split(/\s+/).map(Number);
+                } else if (currentVariable && trimmedLine) {
+                    data[currentVariable] = data[currentVariable].concat(trimmedLine.split(/\s+/).map(Number));
+                }
+            }
+
+            return data;
+        }
+
+        function plotGraph(data) {
+            const traces = [];
+            const xData = data['x'] || Array.from({length: Math.max(...Object.values(data).map(arr => arr.length))}, (_, i) => i + 1);
+
+            for (const [key, values] of Object.entries(data)) {
+                if (key !== 'x') {
+                    traces.push({
+                        x: xData,
+                        y: values,
+                        mode: 'lines',
+                        name: key
+                    });
+                }
+            }
+
+            const layout = {
+                title: 'Multi-line Graph from M-file',
+                xaxis: { title: 'X Axis' },
+                yaxis: { title: 'Y Axis' },
+                showlegend: true,
+                legend: { x: 1, xanchor: 'right', y: 1 }
+            };
+
+            Plotly.newPlot('graph', traces, layout);
+        }
+
+        document.getElementById('file-input').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                const content = e.target.result;
+                const data = parseMFile(content);
+                plotGraph(data);
+            };
+
+            reader.readAsText(file);
+        });
+    </script>
+</body>
+</html>
