@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log File Graph Plotter</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        #file-input { margin-bottom: 10px; }
+        #graph { width: 100%; height: 600px; }
+    </style>
+</head>
+<body>
+    <input type="file" id="file-input" accept=".log,.txt">
+    <div id="graph"></div>
+
+    <script>
+        document.getElementById('file-input').addEventListener('change', handleFileSelect);
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                const content = e.target.result;
+                const data = parseLogFile(content);
+                plotGraph(data);
+            };
+
+            reader.readAsText(file);
+        }
+
+        function parseLogFile(content) {
+            const lines = content.split('\n');
+            const data = {};
+
+            lines.forEach(line => {
+                const [timestamp, name, value] = line.trim().split(',');
+                if (timestamp && name && value) {
+                    if (!data[name]) {
+                        data[name] = { x: [], y: [] };
+                    }
+                    data[name].x.push(new Date(timestamp));
+                    data[name].y.push(parseFloat(value));
+                }
+            });
+
+            return data;
+        }
+
+        function plotGraph(data) {
+            const traces = Object.entries(data).map(([name, values]) => ({
+                type: 'scatter',
+                mode: 'lines',
+                name: name,
+                x: values.x,
+                y: values.y
+            }));
+
+            const layout = {
+                title: 'Log Data Visualization',
+                xaxis: { 
+                    title: 'Timestamp',
+                    rangeslider: {},
+                    type: 'date'
+                },
+                yaxis: { title: 'Value' },
+                showlegend: true
+            };
+
+            const config = {
+                responsive: true,
+                scrollZoom: true
+            };
+
+            Plotly.newPlot('graph', traces, layout, config);
+        }
+    </script>
+</body>
+</html>
