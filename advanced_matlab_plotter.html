@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced MATLAB (.m) File Plotter</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        #plot { width: 100%; height: 500px; }
+    </style>
+</head>
+<body>
+    <h1>Advanced MATLAB (.m) File Plotter</h1>
+    <input type="file" id="mFile" accept=".m">
+    <button onclick="plotGraph()">Plot Graph</button>
+    <div id="plot"></div>
+
+    <script>
+        function plotGraph() {
+            const file = document.getElementById('mFile').files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(event) {
+                const mData = event.target.result;
+                const parsedData = parseMFile(mData);
+                createPlot(parsedData);
+            };
+
+            reader.readAsText(file);
+        }
+
+        function parseMFile(mData) {
+            const lines = mData.split('\n');
+            const data = {};
+            let currentVariable = null;
+
+            lines.forEach(line => {
+                line = line.trim();
+                if (line.includes('=')) {
+                    const [variable, value] = line.split('=').map(s => s.trim());
+                    if (value.startsWith('[')) {
+                        currentVariable = variable;
+                        data[currentVariable] = [];
+                    }
+                } else if (currentVariable && line.endsWith('];')) {
+                    const values = line.slice(0, -1).split(',').map(v => parseFloat(v.trim()));
+                    data[currentVariable].push(...values);
+                    currentVariable = null;
+                } else if (currentVariable) {
+                    const values = line.split(',').map(v => parseFloat(v.trim()));
+                    data[currentVariable].push(...values);
+                }
+            });
+
+            return data;
+        }
+
+        function createPlot(data) {
+            const traces = [];
+            const xAxis = Object.keys(data)[0];  // Assume first variable is x-axis
+
+            for (let i = 1; i < Object.keys(data).length; i++) {
+                const yAxis = Object.keys(data)[i];
+                traces.push({
+                    x: data[xAxis],
+                    y: data[yAxis],
+                    mode: 'lines+markers',
+                    type: 'scatter',
+                    name: yAxis
+                });
+            }
+
+            const layout = {
+                title: 'MATLAB Data Plot',
+                xaxis: { title: xAxis },
+                yaxis: { title: 'Values' },
+                showlegend: true,
+                legend: { x: 1, xanchor: 'right', y: 1 },
+                hovermode: 'closest'
+            };
+
+            const config = {
+                responsive: true,
+                scrollZoom: true,
+                modeBarButtonsToAdd: [
+                    'drawline',
+                    'drawopenpath',
+                    'drawclosedpath',
+                    'drawcircle',
+                    'drawrect',
+                    'eraseshape'
+                ]
+            };
+
+            Plotly.newPlot('plot', traces, layout, config);
+        }
+    </script>
+</body>
+</html>
