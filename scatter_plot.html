@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scatter Plot Plotter</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <h1>Scatter Plot Plotter</h1>
+    <div>
+        <label for="x-values">X Values (comma-separated):</label>
+        <input type="text" id="x-values" placeholder="e.g., 1,2,3,4,5">
+    </div>
+    <div>
+        <label for="y-values">Y Values (comma-separated):</label>
+        <input type="text" id="y-values" placeholder="e.g., 2,4,6,8,10">
+    </div>
+    <button onclick="plotGraph()">Plot Graph</button>
+    <div id="plot"></div>
+
+    <script>
+        function plotGraph() {
+            const xValues = document.getElementById('x-values').value.split(',').map(Number);
+            const yValues = document.getElementById('y-values').value.split(',').map(Number);
+
+            if (xValues.length !== yValues.length) {
+                alert('X and Y values must have the same number of elements');
+                return;
+            }
+
+            const trace = {
+                x: xValues,
+                y: yValues,
+                mode: 'markers',
+                type: 'scatter'
+            };
+
+            const layout = {
+                title: 'Scatter Plot',
+                xaxis: { title: 'X Axis' },
+                yaxis: { title: 'Y Axis' }
+            };
+
+            Plotly.newPlot('plot', [trace], layout);
+        }
+    </script>
+</body>
+</html>
