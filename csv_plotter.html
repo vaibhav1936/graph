@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV File Plotter</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <h1>CSV File Plotter</h1>
+    <input type="file" id="csvFile" accept=".csv">
+    <button onclick="plotGraph()">Plot Graph</button>
+    <div id="plot"></div>
+
+    <script>
+        function plotGraph() {
+            const file = document.getElementById('csvFile').files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(event) {
+                const csvData = event.target.result;
+                const parsedData = parseCSV(csvData);
+                createPlot(parsedData);
+            };
+
+            reader.readAsText(file);
+        }
+
+        function parseCSV(csvData) {
+            const lines = csvData.split('\n');
+            const headers = lines[0].split(',');
+            const data = {};
+
+            headers.forEach(header => data[header.trim()] = []);
+
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',');
+                if (values.length === headers.length) {
+                    headers.forEach((header, index) => {
+                        data[header.trim()].push(parseFloat(values[index]));
+                    });
+                }
+            }
+
+            return data;
+        }
+
+        function createPlot(data) {
+            const traces = [];
+            const xAxis = Object.keys(data)[0];  // Assume first column is x-axis
+
+            for (let i = 1; i < Object.keys(data).length; i++) {
+                const yAxis = Object.keys(data)[i];
+                traces.push({
+                    x: data[xAxis],
+                    y: data[yAxis],
+                    mode: 'markers',
+                    type: 'scatter',
+                    name: yAxis
+                });
+            }
+
+            const layout = {
+                title: 'CSV Data Plot',
+                xaxis: { title: xAxis },
+                yaxis: { title: 'Values' }
+            };
+
+            Plotly.newPlot('plot', traces, layout);
+        }
+    </script>
+</body>
+</html>
